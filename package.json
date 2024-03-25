@@ -1,0 +1,27 @@
+{
+  "name": "pocketbase-queue",
+  "version": "0.0.1",
+  "description": "A simple queue to process tasks using PocketBase",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit && tsup",
+    "dev": "tsx --watch test/index.ts",
+    "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown ."
+  },
+  "author": "Josef Erben",
+  "license": "MIT",
+  "dependencies": {
+    "pocketbase": "^0.21.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3"
+  }
+}
