@@ -2,7 +2,7 @@ import Pocketbase from "pocketbase";
 import { createConnection, createQueue } from "./index";
 
 // create this many tasks per second
-const tasksPerSecond = 5;
+const tasksPerSecond = 30;
 
 export async function start() {
   if (!process.env.POCKETBASE_EMAIL) {
@@ -14,7 +14,7 @@ export async function start() {
 
   const pb = new Pocketbase(process.env.POCKETBASE_URL || "http://127.0.0.1:8090");
   await pb.admins.authWithPassword(process.env.POCKETBASE_EMAIL, process.env.POCKETBASE_PASSWORD);
-  const connection = createConnection({ pb, verbose: true });
+  const connection = createConnection({ pb, verbose: false });
 
   const greetingQueue = createQueue<{ message: string }>({
     name: "greeting",

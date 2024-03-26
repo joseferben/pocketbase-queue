@@ -1,5 +1,5 @@
 import type Pocketbase from "pocketbase";
-import type { ClientResponseError } from "pocketbase";
+import { ClientResponseError } from "pocketbase";
 
 /**
  * Connection to a Pocketbase instance.
@@ -207,12 +207,15 @@ export function createQueue<T extends object | undefined>(opts: CreateQueueOpts<
     } catch (e) {
       if (
         (e as ClientResponseError).originalError?.data.data.task.code ===
-        // failed to acquire lock
-        "validation_not_unique"
+          // failed to acquire lock
+          "validation_not_unique" ||
+        (e as ClientResponseError).originalError?.data.data.task.code ===
+          "validation_missing_rel_records"
       ) {
         return null;
       }
       console.error(e);
+      console.error((e as ClientResponseError).originalError.data);
     }
   }
 
@@ -256,16 +259,44 @@ export function createQueue<T extends object | undefined>(opts: CreateQueueOpts<
           try {
             await pb.collection("queue_locks").delete(acquiredLock.id);
           } catch (e) {
-            // falls through
+            if (e instanceof ClientResponseError) {
+              if (e.originalError?.data.message === "The requested resource wasn't found.") {
+                // falls through
+              } else {
+                console.error(e);
+              }
+            } else {
+              console.error(e);
+            }
           }
           continue;
         }
         // task succeeded
-        await pb.collection("queue_tasks").delete(nextLockableTask.id);
         try {
           await pb.collection("queue_locks").delete(acquiredLock.id);
         } catch (e) {
-          // falls through
+          if (e instanceof ClientResponseError) {
+            if (e.originalError?.data.message === "The requested resource wasn't found.") {
+              // falls through
+            } else {
+              console.error(e);
+            }
+          } else {
+            console.error(e);
+          }
+        }
+        try {
+          await pb.collection("queue_tasks").delete(nextLockableTask.id);
+        } catch (e) {
+          if (e instanceof ClientResponseError) {
+            if (e.originalError?.data.message === "The requested resource wasn't found.") {
+              // falls through
+            } else {
+              console.error(e);
+            }
+          } else {
+            console.error(e);
+          }
         }
         verbose && console.log(workerId, "task processed", nextLockableTask.id);
       } catch (e) {

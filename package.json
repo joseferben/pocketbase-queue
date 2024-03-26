@@ -29,7 +29,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit && tsup",
-    "dev": "tsx --watch text.ts",
+    "dev": "tsx --watch test.ts",
     "format": "prettier --write --ignore-unknown .",
     "changeset": "changeset",
     "publish-packages": "changeset version && changeset publish"
