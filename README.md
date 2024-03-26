@@ -7,7 +7,7 @@ This is **not** a high-throughput queue, but it's a good solution to keep things
 ## Installation
 
 ```bash
-npm i pocketbase-queue
+npm i pocketbase pocketbase-queue
 ```
 
 Import the queue collections to your PocketBase instance. Don't forget to tick `Merge with the existing collections`:
@@ -183,12 +183,13 @@ Import the queue collections to your PocketBase instance. Don't forget to tick `
 import { createConnection, createQueue } from "pocketbase-queue";
 
 // Create a service admin user and use its credentials to create a connection:
-const connection = await createConnection({
-  url: process.env.POCKETBASE_URL, // Your PocketBase URL
-  email: process.env.POCKETBASE_EMAIL, // The email of a PocketBase admin
-  password: process.env.POCKETBASE_PASSWORD, // The password of the PocketBase admin
-  verbose: true,
-});
+const pb = new Pocketbase(process.env.POCKETBASE_URL || "http://127.0.0.1:8090");
+await pb.admins.authWithPassword(
+  process.env.POCKETBASE_EMAIL, // Email of a PocketBase Admin
+  process.env.POCKETBASE_PASSWORD // Password of the PocketBase Admin
+);
+
+const connection = await createConnection({ pb, verbose: true });
 
 const queue = createQueue<{ message: string }>({
   name: "greeting",
