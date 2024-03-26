@@ -1,6 +1,6 @@
 # pocketbase-queue
 
-A type-safe queue for background tasks on top of PocketBase. Works in all JavaScript environments that implement `fetch`.
+A type-safe queue for background tasks on top of PocketBase. Works in all JavaScript environments where the PocketBase JS SDK is supported.
 
 This is **not** a high-throughput queue, but it's a good solution to keep things simple. It works with a vanilla PocketBase installation, no changes or additional hooks needed.
 

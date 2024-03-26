@@ -1,3 +1,4 @@
+import Pocketbase from "pocketbase";
 import { createConnection, createQueue } from "~/index";
 
 // create this many tasks per second
@@ -11,12 +12,9 @@ export async function start() {
     throw new Error("POCKETBASE_PASSWORD is required");
   }
 
-  const connection = await createConnection({
-    url: process.env.POCKETBASE_URL,
-    email: process.env.POCKETBASE_EMAIL,
-    password: process.env.POCKETBASE_PASSWORD,
-    verbose: true,
-  });
+  const pb = new Pocketbase(process.env.POCKETBASE_URL || "http://127.0.0.1:8090");
+  await pb.admins.authWithPassword(process.env.POCKETBASE_EMAIL, process.env.POCKETBASE_PASSWORD);
+  const connection = createConnection({ pb, verbose: true });
 
   const greetingQueue = createQueue<{ message: string }>({
     name: "greeting",

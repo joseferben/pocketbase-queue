@@ -1,4 +1,5 @@
-import Pocketbase, { ClientResponseError } from "pocketbase";
+import type Pocketbase from "pocketbase";
+import type { ClientResponseError } from "pocketbase";
 
 /**
  * Connection to a Pocketbase instance.
@@ -58,10 +59,7 @@ interface Lock {
  * @param opts - Options for task processing including the task itself and the workerId.
  * @returns A promise resolving to void, or void.
  */
-type Processor<T> = (opts: {
-  task: T;
-  workerId: string;
-}) => Promise<void> | void;
+type Processor<T> = (opts: { task: T; workerId: string }) => Promise<void> | void;
 
 /**
  * Statistics of the task processing.
@@ -82,9 +80,7 @@ export interface Stats {
  * @param maintenanceInterval - The interval for maintenance tasks in milliseconds.
  */
 export interface CreateConnectionOpts {
-  url?: string;
-  email: string;
-  password: string;
+  pb: Pocketbase;
   verbose?: boolean;
   lockTimeout?: number;
   failedTaskTtl?: number;
@@ -99,20 +95,15 @@ export interface CreateQueueOpts<T> {
   connection: Connection;
 }
 
-export async function createConnection(
-  opts: CreateConnectionOpts,
-): Promise<Connection> {
+export function createConnection(opts: CreateConnectionOpts): Connection {
   const {
-    url,
-    email,
-    password,
+    pb,
     verbose,
     lockTimeout: lockTimeout_,
     failedTaskTtl: faileTaskTtl_,
     maintenanceInterval: maintenanceInterval_,
   } = opts;
-  const pb = new Pocketbase(url || "http://127.0.0.1:8090");
-  await pb.admins.authWithPassword(email, password);
+
   pb.autoCancellation(false);
 
   const lockTimeout = lockTimeout_ ?? 1000 * 60 * 5;
@@ -121,22 +112,18 @@ export async function createConnection(
 
   async function cleanUpFailedTasks(pb: Pocketbase) {
     verbose && console.log("cleaning up failed tasks");
-    let toDelete = await pb
-      .collection<PersistedTask<object>>("queue_tasks")
-      .getList(1, 100, {
-        filter: `(failed != null) && updated < "${new Date(Date.now() - taskTtl).toISOString()}"`,
-      });
+    let toDelete = await pb.collection<PersistedTask<object>>("queue_tasks").getList(1, 100, {
+      filter: `(failed != null) && updated < "${new Date(Date.now() - taskTtl).toISOString()}"`,
+    });
     while (toDelete.items.length) {
       verbose && console.log("deleting", toDelete.items.length, "tasks");
       for (const task of toDelete.items) {
         await pb.collection("queue_tasks").delete(task.id);
       }
       try {
-        toDelete = await pb
-          .collection<PersistedTask<object>>("queue_tasks")
-          .getList(1, 100, {
-            filter: `(failed != null) && updated < "${new Date(Date.now() - taskTtl).toISOString()}"`,
-          });
+        toDelete = await pb.collection<PersistedTask<object>>("queue_tasks").getList(1, 100, {
+          filter: `(failed != null) && updated < "${new Date(Date.now() - taskTtl).toISOString()}"`,
+        });
       } catch (e) {
         console.error(e);
       }
@@ -176,9 +163,7 @@ export async function createConnection(
   return { pb, verbose };
 }
 
-export function createQueue<T extends object | undefined>(
-  opts: CreateQueueOpts<T>,
-) {
+export function createQueue<T extends object | undefined>(opts: CreateQueueOpts<T>) {
   const {
     name,
     connection: { pb, verbose },
@@ -197,12 +182,10 @@ export function createQueue<T extends object | undefined>(
   }
 
   async function getNextLockableTask() {
-    const result = await pb
-      .collection<PersistedTask<T>>("queue_tasks")
-      .getList(1, 1, {
-        filter: `queue = "${name}" && succeeded = null && failed = null && queue_locks_via_task.id = null`,
-        sort: "created",
-      });
+    const result = await pb.collection<PersistedTask<T>>("queue_tasks").getList(1, 1, {
+      filter: `queue = "${name}" && failed = null && queue_locks_via_task.id = null`,
+      sort: "created",
+    });
     if (!result.items.length) {
       return undefined;
     } else {
@@ -214,10 +197,7 @@ export function createQueue<T extends object | undefined>(
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async function tryAcquireLock(opts: {
-    workerId: string;
-    task: PersistedTask<T>;
-  }) {
+  async function tryAcquireLock(opts: { workerId: string; task: PersistedTask<T> }) {
     const { workerId, task } = opts;
     try {
       return await pb.collection<Lock>("queue_locks").create({
@@ -254,26 +234,19 @@ export function createQueue<T extends object | undefined>(
           await sleep(1000);
           continue;
         }
-        verbose &&
-          console.log(workerId, "trying to lock task", nextLockableTask.id);
+        verbose && console.log(workerId, "trying to lock task", nextLockableTask.id);
         let acquiredLock = await tryAcquireLock({
           workerId,
           task: nextLockableTask,
         });
         if (!acquiredLock) {
-          verbose &&
-            console.log(
-              workerId,
-              "failed to acquire lock, trying to lock next task",
-            );
+          verbose && console.log(workerId, "failed to acquire lock, trying to lock next task");
           continue;
         }
-        verbose &&
-          console.log(workerId, "acquired lock for task", nextLockableTask.id);
+        verbose && console.log(workerId, "acquired lock for task", nextLockableTask.id);
         taskCount++;
         try {
-          verbose &&
-            console.log(workerId, "processing task", nextLockableTask.id);
+          verbose && console.log(workerId, "processing task", nextLockableTask.id);
           await fn({ task: nextLockableTask.task, workerId });
         } catch (e) {
           await pb.collection("queue_tasks").update(nextLockableTask.id, {
@@ -287,10 +260,8 @@ export function createQueue<T extends object | undefined>(
           }
           continue;
         }
-        // don't fail the task if the processor doesn't throw
-        await pb
-          .collection("queue_tasks")
-          .update(nextLockableTask.id, { succeeded: new Date().toISOString() });
+        // task succeeded
+        await pb.collection("queue_tasks").delete(nextLockableTask.id);
         try {
           await pb.collection("queue_locks").delete(acquiredLock.id);
         } catch (e) {
@@ -318,9 +289,7 @@ export function createQueue<T extends object | undefined>(
 
     if (!statsInterval) {
       statsInterval = setInterval(() => {
-        statsListeners.forEach((listener) =>
-          listener({ tasksPerSecond: taskCount }),
-        );
+        statsListeners.forEach((listener) => listener({ tasksPerSecond: taskCount }));
         taskCount = 0;
       }, 1000);
     }
@@ -330,7 +299,7 @@ export function createQueue<T extends object | undefined>(
   function on(event: "error", listener: (error: Error) => void): void;
   function on(
     event: "stats" | "error",
-    listener: ((stats: Stats) => void) | ((error: Error) => void),
+    listener: ((stats: Stats) => void) | ((error: Error) => void)
   ) {
     if (event === "error") {
       errorListeners.push(listener as (error: Error) => void);
