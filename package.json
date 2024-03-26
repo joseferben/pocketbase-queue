@@ -1,6 +1,6 @@
 {
   "name": "pocketbase-queue",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A type-safe queue for background tasks on top of PocketBase.",
   "publishConfig": {
     "access": "public"
@@ -32,7 +32,7 @@
     "dev": "tsx --watch text.ts",
     "format": "prettier --write --ignore-unknown .",
     "changeset": "changeset",
-    "publish": "changeset version && changeset publish"
+    "publish-packages": "changeset version && changeset publish"
   },
   "author": "Josef Erben",
   "license": "MIT",

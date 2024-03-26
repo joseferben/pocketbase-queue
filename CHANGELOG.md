@@ -1,5 +1,11 @@
 # pocketbase-queue
 
+## 0.0.4
+
+### Patch Changes
+
+- add cjs to bundle
+
 ## 0.0.3
 
 ### Patch Changes
