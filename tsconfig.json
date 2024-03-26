@@ -20,6 +20,6 @@
       "~/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "test/index.ts"],
+  "include": ["index.ts", "test.ts"],
   "exclude": ["node_modules", "dist"]
 }

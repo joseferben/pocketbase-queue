@@ -5,16 +5,32 @@
   "publishConfig": {
     "access": "public"
   },
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./cjs": "./dist/index.js"
+  },
   "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
+  "keyword": [
+    "pocketbase",
+    "queue",
+    "background",
+    "task"
+  ],
+  "prettier": {
+    "singleQuote": false,
+    "trailingComma": "es5",
+    "printWidth": 100,
+    "tabWidth": 2
+  },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit && tsup",
-    "dev": "tsx --watch test/index.ts",
+    "dev": "tsx --watch text.ts",
     "format": "prettier --write --ignore-unknown .",
-    "format:check": "prettier --check --ignore-unknown .",
     "changeset": "changeset",
     "publish": "changeset version && changeset publish"
   },

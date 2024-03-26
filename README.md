@@ -4,11 +4,21 @@ A type-safe queue for background tasks on top of PocketBase. Works in all JavaSc
 
 This is **not** a high-throughput queue, but it's a good solution to keep things simple. It works with a vanilla PocketBase installation, no changes or additional hooks needed.
 
+![Screenshot](/screenshot.png)
+
 ## Installation
 
 ```bash
 npm i pocketbase pocketbase-queue
 ```
+
+In order to use CJS instead of ESM, import the package like this:
+
+```typescript
+import { createConnection, createQueue } from "pocketbase-queue/cjs";
+```
+
+### PocketBase collections
 
 Import the queue collections to your PocketBase instance. Don't forget to tick `Merge with the existing collections`:
 

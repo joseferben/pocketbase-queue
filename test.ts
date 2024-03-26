@@ -1,5 +1,5 @@
 import Pocketbase from "pocketbase";
-import { createConnection, createQueue } from "~/index";
+import { createConnection, createQueue } from "./index";
 
 // create this many tasks per second
 const tasksPerSecond = 5;
