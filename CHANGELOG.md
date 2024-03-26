@@ -1,5 +1,17 @@
 # pocketbase-queue
 
+## 0.0.3
+
+### Patch Changes
+
+- correctly release package
+
+## 0.0.2
+
+### Patch Changes
+
+- make pocketbase a peer dependency
+
 ## 0.0.1
 
 ### Patch Changes
