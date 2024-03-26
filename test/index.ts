@@ -1,5 +1,8 @@
 import { createConnection, createQueue } from "~/index";
 
+// create this many tasks per second
+const tasksPerSecond = 5;
+
 export async function start() {
   if (!process.env.POCKETBASE_EMAIL) {
     throw new Error("POCKETBASE_EMAIL is required");
@@ -12,23 +15,53 @@ export async function start() {
     url: process.env.POCKETBASE_URL,
     email: process.env.POCKETBASE_EMAIL,
     password: process.env.POCKETBASE_PASSWORD,
+    verbose: true,
   });
 
-  const queue = createQueue<{ message: string }>({
+  const greetingQueue = createQueue<{ message: string }>({
     name: "greeting",
     connection,
   });
 
-  void queue.startProcessing((task) => {
-    console.log(task);
+  const currentTimeQueue = createQueue<{ message: string }>({
+    name: "current-time",
+    connection,
   });
 
-  // simulate adding tasks to queue
+  process.on("SIGINT", async () => {
+    greetingQueue.close();
+    currentTimeQueue.close();
+    await new Promise((resolve) => setImmediate(resolve));
+    console.log("exiting");
+    process.exit(0);
+  });
+
+  greetingQueue.process({ concurrency: 2 }, async ({ task, workerId }) => {
+    console.log(workerId, task.message);
+  });
+
+  currentTimeQueue.process({ concurrency: 4 }, async ({ task, workerId }) => {
+    const ms = Math.floor(Math.random() * 100);
+    await new Promise((resolve) => setTimeout(resolve, ms));
+    if (Math.random() < 0.5) {
+      throw new Error("random error");
+    }
+    console.log(workerId, task);
+  });
+
+  currentTimeQueue.on("stats", (stats) => {
+    console.log("stats", stats);
+  });
+
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const randomTimeout = Math.floor(Math.random() * 200);
-    await new Promise((resolve) => setTimeout(resolve, randomTimeout));
-    queue.push({ task: { message: "current time is " + Date.now() } });
+    await new Promise((resolve) => setTimeout(resolve, 1000 / tasksPerSecond));
+    currentTimeQueue.push({
+      task: { message: "current time is " + Date.now() },
+    });
+    greetingQueue.push({
+      task: { message: "hello world" },
+    });
   }
 }
 

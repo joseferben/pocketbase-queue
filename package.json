@@ -1,7 +1,7 @@
 {
   "name": "pocketbase-queue",
   "version": "0.0.1",
-  "description": "A simple queue to process tasks using PocketBase",
+  "description": "A type-safe queue for background tasks on top of PocketBase.",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
