@@ -202,7 +202,7 @@ queue.process({ concurrency: 2 }, async ({ task }) => {
 });
 ```
 
-Advanced usage:
+## Advanced usage
 
 ```typescript
 queue.on("error", (error) => {
@@ -227,11 +227,13 @@ process.on("SIGINT", async () => {
 
 ## Run tests
 
-Install PocketBase.
+Install and start PocketBase:
 
 ```bash
 ./pocketbase/pocketbase serve --dev
 ```
+
+Run the tests:
 
 ```bash
 POCKETBASE_EMAIL=<admin email> POCKETBASE_PASSWORD=<admin password> npm run dev
@@ -241,4 +243,4 @@ POCKETBASE_EMAIL=<admin email> POCKETBASE_PASSWORD=<admin password> npm run dev
 
 - I easily reached 50-60 tasks per second with 4 concurrent workers and a local PocketBase instance
 - Make sure to run the workers as close as possible to the PocketBase instance to reduce latency
-- Failed tasks are kept with the error message for 7 days, use `failedTaskTtl` to configure this
+- Failed tasks are stored with the error message for 7 days, use `failedTaskTtl` to configure this setting in milliseconds
