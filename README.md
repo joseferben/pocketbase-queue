@@ -18,8 +18,6 @@ In order to use CJS instead of ESM, import the package like this:
 import { createConnection, createQueue } from "pocketbase-queue/cjs";
 ```
 
-### PocketBase collections
-
 Import the queue collections to your PocketBase instance. Don't forget to tick `Merge with the existing collections`:
 
 ```json
