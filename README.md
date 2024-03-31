@@ -4,6 +4,24 @@ A type-safe queue for background tasks on top of PocketBase. Works in all JavaSc
 
 This is **not** a high-throughput queue, but it's a good solution to keep things simple. It works with a vanilla PocketBase installation, no changes or additional hooks needed.
 
+```typescript
+import { createConnection, createQueue } from "pocketbase-queue";
+
+const pb = ... // PocketBase instance
+const connection = await createConnection({ pb });
+
+const queue = createQueue<{ message: string }>({
+  name: "greeting",
+  connection,
+});
+
+queue.push({ message: "Hello, world!" });
+
+queue.process({ concurrency: 2 }, async ({ task }) => {
+  console.log(task.message);
+});
+```
+
 ![Screenshot](/screenshot.png)
 
 ## Installation
